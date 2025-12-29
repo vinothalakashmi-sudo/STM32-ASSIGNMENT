@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 /* ================= UART ================= */
-HardwareSerial Serial2(PA3, PA2);   // USART2 (RX, TX)
+HardwareSerial SerialUART(PA3, PA2);   // RX, TX (USART2)
 
 /* ================= TIMER ================= */
 HardwareTimer *MyTimer;
@@ -28,7 +28,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
 /* ================= TIMER CALLBACK (100 Hz) ================= */
 void onTimer() {
-  // Start ADC conversion with DMA
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adcBuffer, ADC_BUF_LEN);
 }
 
@@ -38,7 +37,6 @@ void adcDmaInit() {
   __HAL_RCC_ADC1_CLK_ENABLE();
   __HAL_RCC_DMA2_CLK_ENABLE();
 
-  /* ---- DMA CONFIGURATION ---- */
   hdma_adc1.Instance = DMA2_Stream0;
   hdma_adc1.Init.Channel = DMA_CHANNEL_0;
   hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
@@ -51,7 +49,6 @@ void adcDmaInit() {
 
   HAL_DMA_Init(&hdma_adc1);
 
-  /* ---- ADC CONFIGURATION ---- */
   hadc1.Instance = ADC1;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = DISABLE;
@@ -64,7 +61,7 @@ void adcDmaInit() {
   __HAL_LINKDMA(&hadc1, DMA_Handle, hdma_adc1);
 
   ADC_ChannelConfTypeDef sConfig = {0};
-  sConfig.Channel = ADC_CHANNEL_0;          // PA0
+  sConfig.Channel = ADC_CHANNEL_0;   // PA0 -> LDR
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_144CYCLES;
 
@@ -75,11 +72,11 @@ void adcDmaInit() {
 
 /* ================= SETUP ================= */
 void setup() {
-  Serial2.begin(115200);
+  SerialUART.begin(115200);
   delay(1000);
 
-  Serial2.println("STM32F401 ADC + DMA + TIMER (100 Hz)");
-  Serial2.println("Using 10k Potentiometer on PA0");
+  SerialUART.println("STM32F401 ADC + DMA + TIMER (100 Hz) - LDR Example");
+  SerialUART.println("Connect LDR + 10k resistor to PA0 (Voltage Divider)");
 
   adcDmaInit();
 
@@ -94,7 +91,7 @@ void loop() {
   if (dmaComplete) {
     dmaComplete = false;
 
-    Serial2.print("ADC Value: ");
-    Serial2.println(adcBuffer[0]);
+    SerialUART.print("LDR ADC Value: ");
+    SerialUART.println(adcBuffer[0]);
   }
 }
