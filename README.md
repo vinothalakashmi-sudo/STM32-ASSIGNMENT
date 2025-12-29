@@ -1,73 +1,86 @@
-# STM32F401 ADC + DMA + UART (Arduino IDE)
+# STM32F401 Blackpill - LDR ADC with DMA and Timer  
+*Assignment Submission*
 
-## Objective
-The objective of this assignment is to implement an embedded system on STM32 Blackpill where:
-1. A 100Hz timer triggers ADC conversion
-2. ADC data is transferred using DMA
-3. Data is transmitted via UART
-4. Output is displayed on Serial Monitor
+---
 
-## Hardware Used
-- STM32F401CC Blackpill
-- ST-Link V2 (Programming/debugging)
-- CP2102 USB to UART module
-- 10kΩ potentiometer
-- Jumper wires 
+## 1. Project Objective
 
-## Software
-- Arduino IDE
-- STM32 Boards Package (STMicroelectronics)
+The aim of this project is to design and implement a *real-time light sensing system* using a *Light Dependent Resistor (LDR)* interfaced with an *STM32F401 Blackpill* microcontroller. The system should:
 
-## Pin Configuration
-###ADC
-| Function | STM32 Pin |
-|--------|----|
-| ADC Input | PA0 |
-### UART
-| Function | STM32 Pin |
-|--------|----|
-| UART TX | PA3 |
-| UART RX | PA2 |
+1. Trigger ADC readings periodically at *100 Hz* using a hardware timer.  
+2. Transfer ADC results using *DMA* to reduce CPU load.  
+3. Display ADC readings via *Serial UART* for monitoring light intensity.  
+4. Demonstrate understanding of STM32 peripherals: *ADC, DMA, Timer, and UART*.  
 
-## Hardware Connections
-### 10 kilo ohm potiometer
-| Potentiometer Pin | STM32 Pin |
-|--------|----|
-| One end | 3.3V|
-| Middle wire | PA0 |
-| Other end | GND |
+---
 
-### CP2102 Module
-| Function | STM32 Pin |
-|--------|----|
-| TXD | PA3 |
-| RXD | PA2 |
-| GND | GND |
-| VCC | Not Connected |
+## 2. Hardware Components
 
-### ST-LINK V2
-| Function | STM32 Pin |
-|--------|----|
-| SWCLK| SWCLK |
-| SWDIO | SWDIO|
-| 3.3V | 3.3V |
-| GND | GND |
+- STM32F401 Blackpill board  
+- LDR (Light Dependent Resistor)  
+- Resistors: 33 kΩ, 66 kΩ, 470 Ω, 220 Ω  
+- CP2102 USB-to-UART module (for serial communication)  
+- Breadboard and jumper wires  
 
-## How It Works
-- Timer2 generates interrupts at 100Hz
-- Each interrupt triggers ADC read
-- DMA behavior is simulated using interrupt-driven buffer
-- ADC value is sent via UART
+---
 
-## Output
-ADC values (0–4095) are displayed on Arduino Serial Monitor at 115200 baud.
+## 3. Circuit Diagram
 
-## Notes
-- Potentiometer must be powered with 3.3V
-- pinMode(PA0, ANALOG) is required
-- CP2102 VCC should not be connected
+Voltage divider for LDR:
+---
+      ┌───────────────┐
+      │  TIM2 Timer   │
+      │  100 Hz ISR   │
+      └───────┬───────┘
+              │
+              ▼
+      ┌───────────────┐
+      │ ADC Conversion│
+      │ via DMA       │
+      └───────┬───────┘
+              │
+              ▼
+      ┌───────────────┐
+      │ DMA Complete  │
+      │ Callback sets │
+      │ dmaComplete   │
+      └───────┬───────┘
+              │
+              ▼
+      ┌───────────────┐
+      │  Main Loop    │
+      │ Print ADC via │
+      │ SerialUART    │
+      └───────────────┘
+---
+## 6. Usage Instructions
 
+1. Open LDR_DMA_Timer.ino in *Arduino IDE*.  
+2. Select *STM32F401 Blackpill* as the board.  
+3. Connect *LDR + series resistor* to *PA0*.  
+4. Connect *PA2 (TX)* and *PA3 (RX)* to the *CP2102 module*.  
+5. Upload the code.  
+6. Open *Serial Monitor* at *115200 baud*.  
+7. Observe ADC readings change with light intensity.
 
+---
 
+## 7. Observations & Results
 
+- ADC value changes with ambient light.  
+- Using a *33 kΩ series resistor*, ADC swing is limited (~low-resolution for bright light).  
+- Lower series resistors (e.g., ~10 kΩ) provide better dynamic range.  
+- DMA ensures *non-blocking, efficient ADC read, and the timer ensures **consistent 100 Hz sampling*.  
 
+---
+
+## 8. Conclusion
+
+The project successfully demonstrates:
+
+- Real-time ADC reading of an LDR using *DMA*.  
+- Periodic sampling using a *hardware timer at 100 Hz*.  
+- Efficient communication of results via *Serial UART*.  
+
+It validates understanding of *STM32 peripherals* and the practical implementation of *embedded real-time systems*.
+---
