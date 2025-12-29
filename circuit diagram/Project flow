@@ -1,0 +1,27 @@
+## Project Flow
+
+1. *System Initialization*
+   - STM32F401 Blackpill is powered via USB.
+   - UART (USART2) is initialized at 115200 baud for serial communication.
+   - ADC is configured with 12-bit resolution and 3.3V reference.
+   - PA0 is configured as analog input for potentiometer reading.
+
+2. *Timer Configuration*
+   - Timer2 is configured to generate an interrupt at 100 Hz.
+   - The timer interrupt is used only to trigger ADC sampling (flag-based).
+
+3. *ADC Sampling*
+   - On every timer interrupt, a flag is set to indicate ADC sampling request.
+   - The actual ADC conversion is performed in the main loop to ensure stability.
+
+4. *DMA Concept*
+   - ADC data transfer behavior is simulated using interrupt-driven buffering.
+   - This represents how ADC results are moved to memory without CPU blocking.
+
+5. *UART Transmission*
+   - The sampled ADC value is sent through USART2.
+   - CP2102 USB-to-UART module converts UART data to USB.
+
+6. *Serial Monitoring*
+   - The ADC values (0–4095) are displayed on the Arduino Serial Monitor.
+   - Rotating the potentiometer changes the ADC value in real time.
