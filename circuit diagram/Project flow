@@ -1,26 +1,80 @@
-## Project Flow
+# Project Flow - STM32F401 LDR ADC + DMA + Timer
 
-1. *System Initialization*
-   - STM32F401 Blackpill is powered via USB.
-   - UART (USART2) is initialized at 115200 baud for serial communication.
-   - PA0 is configured as analog input for potentiometer reading.
+This document describes the *step-by-step flow of the STM32F401 LDR ADC project*, from sensor input to UART output.
 
-2. *Timer Configuration*
-   - Timer2 is configured to generate an interrupt at 100 Hz.
-   - The timer interrupt is used only to trigger ADC sampling (flag-based).
+---
 
-3. *ADC Sampling*
-   - On every timer interrupt, a flag is set to indicate ADC sampling request.
-   - The actual ADC conversion is performed in the main loop to ensure stability.
+## 1. System Overview
 
-4. *DMA Concept*
-   - ADC data transfer behavior is simulated using interrupt-driven buffering.
-   - This represents how ADC results are moved to memory without CPU blocking.
+The system is designed to:
 
-5. *UART Transmission*
-   - The sampled ADC value is sent through USART2.
-   - CP2102 USB-to-UART module converts UART data to USB.
+- Read light intensity from an *LDR sensor*.  
+- Convert the analog signal to digital using *ADC*.  
+- Transfer the ADC value to memory using *DMA*.  
+- Trigger ADC sampling periodically using a *hardware timer (100 Hz)*.  
+- Send the ADC results via *Serial UART* for monitoring.  
 
-6. *Serial Monitoring*
-   - The ADC values (0–4095) are displayed on the Arduino Serial Monitor.
-   - Rotating the potentiometer changes the ADC value in real time.
+---
+
+## 2. Hardware Components
+
+- STM32F401 Blackpill board  
+- LDR (Light Dependent Resistor)  
+- Resistor for voltage divider (e.g., 33 kΩ)  
+- CP2102 USB-to-UART module  
+
+---
+## 3. Project Flow Description
+
+1. *System Initialization (setup())*
+   - Initialize *SerialUART* at 115200 baud.  
+   - Configure *ADC1*:
+     - 12-bit resolution  
+     - Single-channel mode on PA0  
+     - DMA linked to store results in a buffer  
+   - Configure *DMA2 Stream0* for peripheral-to-memory transfers.  
+   - Initialize *TIM2 hardware timer* at 100 Hz and attach the interrupt handler.  
+
+2. *Timer Interrupt (onTimer())*
+   - Every 10 ms, *trigger ADC conversion* via DMA.  
+   - ADC conversion result will be stored in adcBuffer[0] automatically.  
+
+3. *DMA Completion Callback (HAL_ADC_ConvCpltCallback)*
+   - When ADC conversion completes, the *dmaComplete flag* is set.  
+   - This flag signals the main loop that new data is available.  
+
+4. *Main Loop (loop())*
+   - Continuously monitor dmaComplete.  
+   - When true:  
+     - Read ADC value from adcBuffer[0].  
+     - Print the value via *SerialUART*.  
+     - Reset dmaComplete flag.  
+
+---
+
+## 4. Project Flow Diagram (Logical)
+
+      ┌───────────────┐
+      │  TIM2 Timer   │
+      │  100 Hz ISR   │
+      └───────┬───────┘
+              │
+              ▼
+      ┌───────────────┐
+      │ ADC Conversion│
+      │ via DMA       │
+      └───────┬───────┘
+              │
+              ▼
+      ┌───────────────┐
+      │ DMA Complete  │
+      │ Callback sets │
+      │ dmaComplete   │
+      └───────┬───────┘
+              │
+              ▼
+      ┌───────────────┐
+      │  Main Loop    │
+      │ Print ADC via │
+      │ SerialUART    │
+      └───────────────┘
