@@ -3,7 +3,6 @@
 1. *System Initialization*
    - STM32F401 Blackpill is powered via USB.
    - UART (USART2) is initialized at 115200 baud for serial communication.
-   - ADC is configured with 12-bit resolution and 3.3V reference.
    - PA0 is configured as analog input for potentiometer reading.
 
 2. *Timer Configuration*
